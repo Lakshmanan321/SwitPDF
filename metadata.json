@@ -1,0 +1,6 @@
+{
+  "name": "PDF & Image Tools",
+  "description": "A premium SaaS platform for PDF and image conversion and editing, featuring user auth, usage analytics, tier tracking, billing, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

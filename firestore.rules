@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if request is for the current user's document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Helper to check if user is an admin
+    function isAdmin() {
+      return isAuthenticated() && (
+        (request.auth.token.email == "lakshmanaperumal321@gmail.com" && request.auth.token.email_verified == true) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true)
+      );
+    }
+
+    // Users collection rules
+    match /users/{userId} {
+      allow get: if isAuthenticated() && (isOwner(userId) || (userId != request.auth.uid && isAdmin()));
+      allow list: if isAuthenticated() && isAdmin();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && (
+        isOwner(userId) || isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      // UsageLogs subcollection
+      match /usageLogs/{logId} {
+        allow read, write: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    // Feedback rules
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Transactions rules
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+  }
+}
